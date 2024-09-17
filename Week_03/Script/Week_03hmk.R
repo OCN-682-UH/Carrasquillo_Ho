@@ -11,6 +11,7 @@ library(devtools)
 library(usethis)
 library(beyonce)
 library(ggthemes)
+library(ggplot2)
 
 #take a look at the dataset using glimpse function;
 #shows each variable and if function is facto, double, interger...etc...
