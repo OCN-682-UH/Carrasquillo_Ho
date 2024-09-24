@@ -45,25 +45,12 @@ ggplot(gurl_penguins,
   theme_bw() 
 
 #adding pink colors text
-  hello_kitty <- ggplot(gurl_penguins, 
+  ggplot(gurl_penguins, 
          mapping = aes(x = island, y = log_mass, fill = island)) +
     geom_boxplot() +
     labs(x = "Island", y = "Log Body Mass (g)") + 
     scale_fill_manual(values = c("#FFC0CB", "#FF8096", "#FF4162" ))
   theme_bw() 
-  
-  
-  #save ggplot jpg
-  ggsave(here("Week_04", "Output", "hellokitty.jpg"),
-         width = 7, height = 5)
-  
-  
-#save ggplot pdf
-  ggsave(here("Week_04", "Output", "hellokitty.pdf"),
-         width = 7, height = 5)
-0
 
-
-  
 
   
