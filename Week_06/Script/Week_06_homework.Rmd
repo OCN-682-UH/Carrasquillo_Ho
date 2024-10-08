@@ -1,0 +1,120 @@
+---
+title: "Week 06 Homework"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-08"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: spacelab
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+# Load libraries
+
+```{r}
+library(tidyverse)
+library(here)
+library(ggplot2)
+library(prettydoc)
+library(memer)
+library(ymlthis)
+library(kableExtra)
+library(prettydoc)
+
+```
+
+# Load the data
+###Data is used from Becker
+
+```{r}
+chemdata <- read.csv(here("Week_04", "Data","chemicaldata_maunalua.csv"))
+view(chemdata)
+```
+
+# Remove all NAs from dataset
+
+#### Separate tide and time columns & delete old column
+
+```{r}
+chemdata_clean <- chemdata%>%
+  drop_na()%>%
+  separate(col = Tide_time,
+           into = c("Tide", "Time"),
+           sep = "_",
+           remove = FALSE)
+head(chemdata_clean)
+```
+
+# Change data set to long
+```{r}
+chemdata_long <-chemdata_clean%>%
+  pivot_longer(cols = Temp_in:percent_sgd,
+               names_to = "Variables",
+               values_to = "Values")
+view(chemdata_long)
+```
+
+# Change data set to wide
+
+```{r}
+chemdata_wide <-chemdata_long %>%
+  pivot_wider(names_from = Variables,
+              values_from = Values)
+view(chemdata_wide)
+```
+
+# Make a plot
+
+```{r}
+ggplot(chemdata_wide, 
+         mapping = aes(x = Site, y = Salinity,
+                       fill = Season)) +
+    scale_fill_manual(values = c("#FF99cc", "#FF9933")) +
+    geom_violin() +
+    facet_wrap(~Season) +
+    labs(title = "Maunalua Bay Salinity",
+         x = "Site",
+         y ="Salinity")
+```
+
+# Summarize **Average Salinity** in a Table based on _season_
+
+```{r}
+chemdata_wide %>%
+  group_by(Season) %>%
+  summarise(Mean_Salinity = mean(Salinity, na.rm = TRUE)) %>%
+  kbl() %>%
+  kable_classic() %>%
+  row_spec(2, bold = T, color ="white", background = "pink") %>%
+  row_spec(1, bold = T, color ="white", background = "orange") %>%
+  kable_styling(full_width = FALSE)
+```
+
+## Summarize **Average SGD** in a Table based on _season_
+
+```{r}
+chemdata_wide %>%
+  group_by(Season) %>%
+  summarise(Mean_SGD = mean(percent_sgd, na.rm = TRUE)) %>%
+  kbl() %>%
+  kable_classic() %>%
+  row_spec(2, bold = T, color ="white", background = "salmon") %>%
+  row_spec(1, bold = T, color ="white", background = "red") %>%
+  kable_styling(full_width = FALSE)
+```
+
+## Make a funny meme
+
+```{r}
+meme_get("TrumpBillSigning") %>%
+  meme_text_trump("bbs first RMarkdown file")
+
+  
+```
+
