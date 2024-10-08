@@ -1,0 +1,42 @@
+---
+title: "My Penguin Practice"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-01"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: darkly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# This is my intro to Penguins
+Today we are going to work with penguin data to learn *RMarkdown*  
+
+# Load libraries
+```{r}
+library(palmerpenguins)
+library(tidyverse)
+library(here)
+```
+
+# Inspect the data
+```{r}
+glimpse(penguins)
+```
+
+# Make a plot
+```{r}
+penguins %>% 
+  ggplot(penguins, mapping = aes(x= species, y = body_mass_g, color = island)) + 
+  geom_violin() +
+  labs(x = "Species", 
+       y = "Body Mass (g)") 
+```
+```{r}
+
+```
+

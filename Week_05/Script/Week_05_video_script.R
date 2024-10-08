@@ -39,7 +39,7 @@ ymd("2021-02-24")
 #if its in mdy format to ISO 
 mdy("02/24/2021")
 
-#convert date from february 
+#convert date from february 24, 2021
 mdy("February, 24, 2021")
 
 #date month year

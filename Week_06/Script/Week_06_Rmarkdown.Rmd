@@ -1,0 +1,71 @@
+---
+title: "Week_06_video"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-08"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.path = "../Output/")
+```
+
+# Load libraries
+
+```{r}
+library(tidyverse)
+library(here)
+library(praise)
+library(ggplot2)
+library(tint)
+library(palmerpenguins)
+library(kableExtra)
+library(prettydoc)
+library(ymlthis)
+library(memer)
+```
+
+# View the data
+```{r}
+view(penguins)
+```
+
+#make a simple plot 
+
+```{r penguinplot, fig.asp=1.2, fig.align='center', fig.cap="This is a scatterplot", dev='pdf'}
+penguins %>%
+  ggplot(aes(x = body_mass_g,
+                     y = flipper_length_mm,
+                     color = island)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Body Mass (g) ",
+       y = "Flipper Length (mm)") +
+  theme_classic()
+```
+# Create a table in RMarkDown
+
+```{r}
+penguins %>%
+  group_by(species) %>%
+  summarise(billmean = mean(bill_length_mm, na.rm = TRUE)) %>%
+  kbl() %>%
+  kable_classic() %>%
+  row_spec(2, bold = T, color ="white", background = "pink") %>%
+  row_spec(1, bold = T, color ="white", background = "orange") %>%
+  kable_styling(full_width = FALSE)
+
+```
+
+# My very first coding meme
+```{r}
+meme_get("DistractedBf") %>%
+  meme_text_distbf("New Love Is Blind Season", "Soli", "anything productive")
+```
+
