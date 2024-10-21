@@ -1,0 +1,119 @@
+---
+title: "Week_07_classwork_2"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-14"
+output:
+    prettydoc::html_pretty:
+    theme: tactile
+    highlight: github
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the libraries
+
+```{r}
+library(tidyverse)
+library(here)
+library(prettydoc)
+library(devtools)
+library(ggmap)
+library(ggspatial)
+library(emojifont)
+```
+
+
+# Load that data girl ! :-)
+## Use the plastic pollution data for actual homework
+
+```{r}
+ChemData <-read_csv(here("Week_07", "Data", "chemicaldata_maunalua.csv"))
+view(ChemData)
+```
+
+
+## lets make a map of Oahu (only going to pull out the coordinate system)
+```{r}
+Oahu <-get_map("Oahu")
+```
+#make a map
+```{r}
+ggmap(Oahu)
+```
+
+# Lets get the coordinates to focus on Wailupe 
+## The "zoom" argument goes from 3 to 20. 3 = continent level; 20 = single building level
+```{r}
+WP <- data.frame(long = -157.7621, lat = 21.27427)
+Map1 <- get_map(WP, zoom = 17)
+```
+
+#change the map type so it's prettier
+
+```{r}
+Map1<- get_map(WP, zoom = 17, maptype = "satellite")
+ggmap(Map1)
+```
+#now lets make a stamen water color map 
+## why didn't this work?
+
+```{r}
+Map1 <- get_map(WP, zoom = 17, maptype = "stamen_watercolor", source = "stadia")
+```
+
+#Lets plot salinity values of each sampling points
+
+```{r}
+Map1 <- get_map(WP, zoom = 17, maptype = "satellite")
+ggmap(Map1)+
+  geom_point(data = ChemData,
+             aes(x = Long,
+                 y = Lat, 
+                 color = Salinity),
+             size = 4) +
+  scale_color_viridis_c()
+```
+
+# Lets add a scale bar and north arrow
+# bl = bottom left 
+# tl = top left 
+# crs = 4326 is code for a
+```{r}
+ggmap(Map1)+
+  geom_point(data = ChemData,
+             aes(x = Long,
+                 y = Lat, 
+                 color = Salinity),
+             size = 4) +
+  scale_color_viridis_c() +
+  annotation_scale(bar_cols = c ("yellow", "white"), 
+                    location = "bl") + 
+  annotation_north_arrow(location = "tl")+ 
+  coord_sf(crs = 4326)
+```
+
+# You can use geocode() if you don't know the exact GPS coordinates
+
+```{r}
+geocode("the white house")
+```
+
+#UH Manoa
+```{r}
+geocode("University of Hawaii at Manoa")
+```
+
+#another day, another R package that slays
+
+```{r}
+search_emoji("smile")
+ggplot() +
+  geom_emoji('smiley', 
+             x = 1:5, 
+             y = 1:5,
+             size = 11)
+```
+

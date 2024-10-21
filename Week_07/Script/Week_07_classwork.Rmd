@@ -1,0 +1,207 @@
+---
+title: "Week_07_classwork"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-08"
+output:
+    prettydoc::html_pretty:
+    theme: tactile
+    highlight: github
+  
+---
+
+## Load Libraries
+```{r}
+library(tidyverse)
+library(here)
+library(maps)
+library(mapdata)
+library(mapproj)
+library(ggdogs)
+library(prettydoc)
+```
+
+# Load the data
+###Don't forget to copy over the data from the Fall 2024 files to your personal Data folder! :)
+#If you don't *the data won't load!*
+```{r}
+popdata<-read_csv(here("Week_07","Data","CApopdata.csv"))
+```
+```{r}
+stars<-read_csv(here("Week_07","Data","stars.csv"))
+```
+
+# view data 
+```{r}
+world <-map_data("world")
+head(world)
+```
+
+```{r}
+usa <-map_data("usa")
+head(usa)
+```
+
+#States
+```{r}
+states<-map_data("state")
+```
+
+#county
+```{r}
+county<-map_data("county")
+```
+
+#Italy
+```{r}
+italy <-map_data("italy")
+head(italy)
+```
+
+#Make a map of the world 
+```{r}
+ggplot()+
+  geom_polygon(data = world, aes(x = long, y = lat, group = group))
+```
+
+#what happens if you forget the group? 
+
+```{r}
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat))
+```
+# Let's add color! 
+```{r}
+ggplot()+
+  geom_polygon(data = world, 
+               aes(x = long, y = lat, group = group, fill = region),
+               color = "black") +
+  guides(fill = FALSE) + 
+  theme(panel.background = element_rect(fill = "lightblue"))
+
+```
+#Change the map projection (there are many types of projection)
+```{r}
+ggplot()+
+  geom_polygon(data = world, 
+               aes(x = long, y = lat, group = group, fill = region),
+               color = "black") +
+  guides(fill = FALSE) + 
+  theme(panel.background = element_rect(fill = "lightblue"))+
+coord_map(projection = "mercator",
+            xlim = c(-180,180))
+
+```
+#Use the sinusoidal projection
+
+```{r}
+ggplot()+
+  geom_polygon(data = world, 
+               aes(x = long,
+                   y = lat,
+                   group = group, 
+                   fill = region),
+               color = "black")+
+  theme_minimal()+
+  guides(fill = FALSE)+
+  theme(panel.background = element_rect(fill = "lightblue"))+
+  coord_map(projection = "sinusoidal",
+            xlim = c(-180,180))
+
+```
+#Lets make a map of California for location of sea stars
+```{r}
+head(states)
+```
+
+#filter out just California data
+```{r}
+CA_dates <- states %>%
+  filter(region == "california")
+```
+
+#lets make a simple map of CA
+```{r}
+ggplot()+ 
+  geom_polygon(data = CA_dates, aes(x = long, y = lat, group = group)) +
+  coord_map()
+```
+
+#Were going to add multiple layers by _wrangling the data_
+##this created a new data frame 
+
+```{r}
+CApop_county <- popdata %>%
+  select("subregion" = County, Population) %>%
+  inner_join(county) %>%
+  filter(region == "california")
+head(CApop_county)
+```
+#Make a map of CA population by county
+##We'll log transform the data so we can visualize the populations better!
+```{r}
+ggplot()+
+  geom_polygon(data = CApop_county,
+               aes(x = long,
+                   y= lat,
+                   group = group,
+                   fill = Population),
+               color = "black")+
+  coord_map()+
+  theme_void()+ 
+    scale_fill_gradient(trans = "log10")
+```
+
+
+#Now lets layer starfish data onto this map!
+## We need to visiualize the data 
+```{r}
+head(stars)
+```
+
+# We'll add on the star data set
+
+```{r}
+ggplot()+
+  geom_polygon(data = CApop_county,
+               aes(x = long,
+                   y= lat,
+                   group = group,
+                   fill = Population),
+               color = "black")+
+  geom_point(data = stars,
+             aes(x = long,
+                 y = lat,
+                 size = star_no)) +
+  coord_map()+
+  theme_void()+ 
+    scale_fill_gradient(trans = "log10")
+```
+
+#Now lets make the plot a little more beautiful 
+
+```{r}
+ggplot()+
+  geom_polygon(data = CApop_county,
+               aes(x = long,
+                   y= lat,
+                   group = group,
+                   fill = Population),
+               color = "black")+
+  geom_point(data = stars,
+             aes(x = long,
+                 y = lat,
+                 size = star_no)) +
+  coord_map()+
+  theme_void()+ 
+    scale_fill_gradient(trans = "log10")+
+  labs(size = "# stars/m2") 
+  ggsave(here("Week_07","Output","CApop.pdf"))
+  
+```
+
+# AWESOME DOG PACKAGE 
+```{r}
+ggplot(mtcars) +
+  geom_dog(aes(mpg, wt), dog = "eyes", size = 7)
+```
+

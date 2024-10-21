@@ -111,7 +111,7 @@ chemdata_wide %>%
 
 ## Make a funny meme
 
-```{r}
+```{r, out.height=100, out.width=100}
 meme_get("TrumpBillSigning") %>%
   meme_text_trump("bbs first RMarkdown file")
 

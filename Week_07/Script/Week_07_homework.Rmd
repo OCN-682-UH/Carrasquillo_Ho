@@ -1,0 +1,79 @@
+---
+title: "Week_07_Homework Map Practice"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the libraries
+
+```{r}
+library(tidyverse)
+library(here)
+library(devtools)
+library(ggmap)
+library(ggspatial)
+```
+
+## Let's load the data. Apparently there are tons of bigfoot sightings...which I'm skeptical about so let's explore this dataset! 
+```{r}
+bigfoot <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-09-13/bigfoot.csv')
+view(bigfoot)
+
+```
+
+## We're going to pull the state data from the dataset
+```{r}
+state <-map_data("state")
+head(state)
+```
+
+
+
+### Data Manipulation
+#### We're going to look at the seasons and how many bigfoot sightings over time
+##### From this data, I can see the amount of sightings by state. It would be interesting to plot the frequency on a map based on state!I should look into add the lat and long
+```{r}
+bigfoot <- bigfoot %>% 
+  group_by(state, season) %>% #group state and seasons
+  filter(season== "Summer" | season == "Winter"  | season == "Spring") %>% #removes unknown season data
+  summarise(sighting= n()) #create a new column with sightings 
+
+bigfoot_s <- state %>%
+  mutate(region = str_to_title(region)) %>% #capitalize the state to match bigfoot data
+  rename(state = region) %>% #rename column to match the bigfoot data
+  inner_join(bigfoot) #join the two data sets together
+view(bigfoot_s)
+  
+```
+
+# Perrrfect! Now that we've manipulated the data set in a way we can use it...let's make a map! 
+#I want to look at the bigfoot sightings across the US
+```{r}
+ggplot()+
+  geom_polygon(data = bigfoot_s,
+               aes(x = long, y = lat, group = group,
+                                     fill = sighting), #should fill the states based on number of sightings
+               color = "black") #color of the outline of the states
+```
+
+#Hmm, I want to make the points larger from the sightings...
+```{r}
+ggplot()+
+  geom_polygon(data = bigfoot_s, aes(x = long, y = lat, group = group, fill = sighting), #should fill the states based on number of sightings
+               color = "black") +
+  coord_map(projection = "mercator") +
+  facet_wrap(~ season)+ #mapping by seasons
+  labs(fill = "Bigfoot Sightings",
+       title = "Seasonal Bigfoot Sightings in the USA") +
+  theme(plot.title = element_text(hjust = 1, vjust = 1),
+        legend.title = element_text(size =7))
+```
+
+## Based on our **super kewl** map, we can see that bigfoot sightings are more prominent in the west coast during the summertime.
+### This is probably because bigfoot are spending more time outside...hunting and gathering for whatever it is they eat hahah. Super _legit_. 
+ 
