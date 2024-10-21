@@ -1,0 +1,487 @@
+---
+title: "Week_08 Classwork"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### We're going to be learning how to do text analysis *yay!*
+## Let's install the following packages. 
+```{r cars}
+library(here)
+library(tidyverse)
+library(tidytext)
+library(wordcloud2)
+library(janeaustenr)
+library(ggirl)
+library(patchwork)
+library(ggrepel)
+library(gganimate)
+library(magick)
+library(palmerpenguins)
+library(sourrr)
+```
+
+### What is string?
+A string is the same as a character. You can tell its a string by the use of quotations.
+```{r}
+words <- "This is a string"
+words
+```
+# You can have several strings into a vector
+
+```{r}
+words_vector <- c("Apples", "Bananas", "Oranges")
+words_vector
+```
+##### There are *four basic families of functions* in the stringr package.
+
+* _Manipulation_ which allow you to manipulate individual characters within the strings in character vectors.
+* _Whitespace tools_ to add, remove, and manipulate whitespace.
+* _Locale sensitive operations_ whose operations will vary from locale to locale.
+* _Pattern matching functions_ These recognize four engines of pattern description. The most common is regular expressions, but there are three other tools.
+
+Let's look at the manipulation function first. . .
+```{r}
+paste ("High temp", "Low pH")
+```
+Add a dash in between the words
+
+```{r}
+paste ("High temp", "Low pH", sep = "-")
+
+```
+
+You can also remove spaces in between words by using a zero (0)
+
+```{r}
+paste0("High temp", "Low pH")
+
+```
+We can make the manipulate function to add in data such as...
+```{r}
+shapes <- c("Square", "Circle", "Triangle")
+paste("My favorite shape is a", shapes)
+```
+
+It can be useful when making labels for your plots... how can we use this in our labels though.
+```{r}
+two_cities <- c("best", "worst")
+paste("It was the", two_cities, "of times.")
+```
+If you want to know how long a string is
+
+```{r}
+str_length(shapes)
+```
+What if you want to extract specific characters 
+```{r}
+seq_data <-c("ATCCCGTC")
+str_sub(seq_data, start = 2, end = 4) #this extracts the 2nd to 4th
+```
+You can also modify the strings
+?This didn't work...
+```{r}
+str_sub(seq_data, start = 3, end = 3) <- "A"
+seq_data
+```
+You can duplicate the patterns in the strings. Lets duplicate it 2 & 3 times
+```{r}
+str_dup(seq_data, times = c(2, 3)) #number of times to duplicate
+```
+
+Lets pretend you have some words with extra white spaces and R thinks its an entirely new word...let's see how we would deal with that
+```{r}
+badtreatments <-c("High", " High", "High ", "Low", "Low")
+badtreatments
+```
+Removing the white spaces...
+```{r}
+str_trim(badtreatments)
+```
+
+You can remove from one side or the other
+```{r}
+str_trim(badtreatments, side = "left") # this removes left
+```
+The opposite of str_trim is str_pad
+```{r}
+str_pad(badtreatments, 5, side = "right") # add a white space to the right side after the 5th character
+
+```
+
+Adding characters instead of white space
+```{r}
+str_pad(badtreatments, 5, side = "right", pad = "1") # add a 1 to the right side after the 5th character
+
+```
+
+Make everything uppercase
+```{r}
+x <- "I love R!"
+str_to_upper(x)
+```
+Lowercase
+```{r}
+str_to_lower(x)
+```
+
+capitlaize the first letter of each word
+```{r}
+str_to_title(x)
+```
+Now let's do some pattern matching using _stringr_ function. 
+This will allow us to view, detect, locate, extract, match, replace, ans split strings...
+```{r}
+data<- c("AAA", "TATA", "CTAG", "GCTT")
+```
+
+```{r}
+str_view(data, pattern = "A")
+```
+Detect a specific pattern
+```{r}
+str_detect(data, pattern = "A")
+```
+
+Locate a pattern
+```{r}
+str_locate(data, pattern = "AT")
+```
+
+### Regex: regular expressions
+* Metacharacters - match a single character (. \ ( ) { $ * + ? })
+* Sequences
+* Quantifiers
+* Character Classes
+* POSIX character classes 
+
+Lets say you have the following set of strings..
+```{r}
+vals <-c("a.b", "b.c", "c.d")
+```
+
+We want to replace the "." with a space! This will only replace the first "."
+```{r}
+str_replace(vals, "\\.", " ")
+```
+If there's multiple "." in the string then we have to use antoher function
+```{r}
+vals<-c("a.b.c", "b.c.d","c.d.e")
+#string, pattern, replace
+str_replace(vals, "\\.", " ")
+```
+
+There are shorthand versions (called anchors) for commonly used sequences in R. You'll need to look them up! 
+
+Now lets subset the vector to only keep strings with digits..
+```{r}
+val2 <-c("test 123", "test 456", "test")
+str_subset(val2, "\\d")
+```
+A _character class_ are a list of characters enclosed by square brackets []. They're used to only match one of the different characters. 
+
+```{r}
+strings<-c("550-153-7578",
+         "banana",
+         "435.114.7586",
+         "home: 672-442-6739")
+```
+
+Lets make a regex that finds strings and contain a phone number..
+
+```{r}
+phone <- "([2-9][0-9]{2})[-.](0-9]{3})[-.]([0-9]{4})"
+```
+```{r}
+str_detect(strings, phone)
+
+```
+let's subset strings w/ phone numbers
+```{r}
+test <- str_subset(strings, phone)
+test
+```
+think pair share...
+replace all "." with "-" and extract only the numbers. remove any white space! 
+```{r}
+test %>%
+  str_replace_all(pattern = "\\.", replacement= "-") %>%
+  str_replace_all(pattern = "[a-zA-Z]|\\:", replacement = "") %>% #removes things we don't want
+  str_trim() #trim the white space
+```
+Lets explore books by Jane Austen now
+
+```{r}
+head(austen_books())
+tail(austen_books())
+```
+clean it up
+```{r}
+original_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(line = row_number(),
+         chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+                                                 ignore_case = TRUE)))) %>%
+  ungroup()
+
+head(original_books)
+```
+We'll use the function unnest_tokens(), which will unnest the data so its only one word per row. 
+```{r}
+tidy_books <- original_books %>%
+  unnest_tokens(output = word, input = text) #add a column named word, with the input column as text 
+
+head(tidy_books)
+```
+
+We'll use the function get_stopwords() to remove common, but unnecessary words such as and, by, therefore...
+```{r}
+head(get_stopwords())
+```
+
+We can now join to remove all the stopwords
+```{r}
+cleaned_books <- tidy_books %>%
+  anti_join(get_stopwords())
+
+head(cleaned_books)
+```
+
+Lets find the most common words across all the jane austen books
+
+```{r}
+cleaned_books %>% 
+  count(word, sort = TRUE)
+```
+
+How do we modify this code to count the most popular words by book? What about by each chapter w/in a book? 
+
+Lets try using the function get_sentiments() for a sentiment analysis! 
+```{r}
+sent_word_counts <- tidy_books %>%
+  inner_join(get_sentiments()) %>% #this will only keep pos or negative words
+  count(word, sentiment, sort = TRUE) #will count the words
+
+head(sent_word_counts)[1:3,]
+```
+
+Now let's plot it!
+
+
+```{r}
+sent_word_counts %>%
+  filter(n > 150) %>% #take only if there are over 150 instances
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>% #add a column where it'll count if word is negative
+  mutate(word = reorder(word, n)) %>% #sort largest to smallest
+  ggplot(aes(word, n, fill = sentiment)) +
+  geom_col() +
+  coord_flip() +
+  labs(y = "Contribution to sentiment")
+```
+Now make a word cloud!
+
+```{r}
+words <-cleaned_books %>%
+  count(word) %>% 
+  arrange(desc(n)) %>% #sort the words
+  slice(1:100) #lets only look at top 100
+
+wordcloud2(words, shape = 'triangle', size = 0.3)
+```
+
+## Totally awesome R Package is ggirl which will turn your plot into a postcard!!
+
+
+### Moving onto the online class video
+
+_Advanced plotting packages_
+* patchwork - bringing plots together
+* ggrepel - repel your labels on your plots
+* gganimate - add some animations to plots
+* magick - photoprocessing 
+
+Let's start with two simple plots from palmer penguin dataset.
+
+Plot 1
+```{r}
+p1<-penguins %>%
+  ggplot(aes(x = body_mass_g, 
+             y = bill_length_mm, 
+             color = species))+
+  geom_point()
+p1
+```
+
+
+Plot 2
+```{r}
+p2<-penguins %>%
+  ggplot(aes(x = sex, 
+             y = body_mass_g, 
+             color = species))+
+  geom_jitter(width = 0.2)
+p2
+```
+Lets add them together. 
+
+```{r}
+p1 + p2
+```
+
+```{r}
+p1 / p2 +
+ plot_layout(guides = 'collect') + #makes only one legend
+  plot_annotation(tag_levels = 'A') #adds table letters
+```
+
+We really only want one legend.. 
+patchwork will allow you to process the 
+
+```{r}
+p1+p2 +
+  plot_layout(guides = 'collect') + #makes only one legend
+  plot_annotation(tag_levels = 'A') #adds table letters
+```
+
+## ggrepel 
+```{r}
+view(mtcars)
+```
+
+Make a simple plot
+```{r}
+ggplot(mtcars, aes(x = wt,
+                   y = mpg,
+                   label = rownames(mtcars))) + #how you extract rownames
+  geom_text() + #creates a text label
+  geom_point(color = 'red')
+```
+
+Lets use the ggrepel package to repel the labels from the points so we can acutally see the labels! yay.
+
+```{r}
+ggplot(mtcars, aes(x = wt,
+                   y = mpg,
+                   label = rownames(mtcars))) + #how you extract rownames
+  geom_text_repel() + #repel the labels
+  geom_point(color = 'red')
+```
+
+You can also make them into labels!
+```{r}
+ggplot(mtcars, aes(x = wt,
+                   y = mpg,
+                   label = rownames(mtcars))) + #how you extract rownames
+  geom_label_repel() + #repel the labels
+  geom_point(color = 'red')
+```
+
+## gganimate
+
+Lets show how this changes over the years! 
+```{r}
+penguins %>%
+  ggplot(aes(x = body_mass_g,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point() +
+  transition_states(
+    year, #what are we animating by
+    transition_length = 2, #the relative length to go from one to the next in seconds
+    state_length = 1 #the length of how long itll stay at the point
+  )
+```
+
+Now lets change the movement of the animation.
+```{r}
+penguins %>%
+  ggplot(aes(x = body_mass_g,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point() +
+  transition_states(
+    year, #what are we animating by
+    transition_length = 2, #the relative length to go from one to the next in seconds
+    state_length = 1 #the length of how long itll stay at the point
+  ) +
+  ease_aes("bounce-in-out") 
+```
+
+Now finally lets add a label to show the year over time. 
+```{r}
+penguins %>%
+  ggplot(aes(x = body_mass_g,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point() +
+  transition_states(
+    year, #what are we animating by
+    transition_length = 2, #the relative length to go from one to the next in seconds
+    state_length = 1 #the length of how long itll stay at the point
+  ) +
+  ease_aes("bounce-in-out") +
+  labs(title = 'Year: {closest_state}') #this is the arguement of state of where you are...Year is the static part...
+```
+
+And now to save! 
+```{r}
+penguins %>%
+  ggplot(aes(x = body_mass_g,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point() +
+  transition_states(
+    year, #what are we animating by
+    transition_length = 2, #the relative length to go from one to the next in seconds
+    state_length = 1 #the length of how long itll stay at the point
+  ) +
+  ease_aes("bounce-in-out") +
+  labs(title = 'Year: {closest_state}') #this is the arguement of state of where you are...Year is the static part...
+anim_save(here("Week_08", "Output", "mypenguingif.gif"))
+```
+
+Last package magick
+You can put images on top of your plots! 
+google an image and the link has to end in png
+
+```{r}
+penguin<-image_read("https://pngimg.com/uploads/penguin/pinguin_PNG9.png")
+penguin
+```
+First we have to save the plot we're going to use before adding the image.
+```{r}
+penguins %>%
+  ggplot(aes(x = body_mass_g,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point()
+
+ggsave(here("Week_08", "Output", "penguinplot.png"))
+```
+Now, that's its saved as a png file. We can add the image w/ the magick package.
+
+```{r}
+penplot <-image_read(here("Week_08", "Output", "penguinplot.png"))
+out <- image_composite(penplot, penguin, offset = "+40+30")
+out
+```
+We can also add GIFs to plot 
+```{r}
+pengif <-image_read("https://media3.giphy.com/media/H4uE6w9G1uK4M/giphy.gif")
+outgif <-image_composite(penplot, pengif, gravity = "center") #gravity as where does it pull. center puts it right in the center
+animation <- image_animate(outgif, fps = 10, optimize = TRUE)
+animation
+```
+
+## totally awesome R package ! 
+## SOURDOUGH RECIPE MIXTURE OMGGGG YESSS
+```{r}
+build_recipe(final_weight = 1000, hydration = 0.75)
+```
+
