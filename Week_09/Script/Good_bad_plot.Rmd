@@ -1,0 +1,172 @@
+---
+title: "Good Plot Bad Plot"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Due October 29
+
+Your homework is to create two version of similar plots, using any dataset you choose. You must create the plots using ggplot2, post-processing with Adobe Illustrator or similar is not allowed. This homework is a contest, and the winner will win a prize to be disclosed.
+
+Please submit your homework by posting a markdown document containing the plots, the code you used to create them, and your discussion of the plot within the markdown doc to github. Data also needs to be submitted.
+
+The first plot should be as bad as possible. Your reading from Claus Wilke’s and Healy's textbook describe the many ways that a plot can become misleading, difficult to interpret, or or just plain ugly, and you should use all of the tools that you can. Please try to make me, a person who cares a great deal about high-quality data visualization, cry.
+
+You should explain in text all of the ways in which the bad plot is bad. Bullet points are fine, but clearly articulate each principle of data visualization that you have broken.
+
+The second plot should be based on the same or similar data to the first plot, but it should be good. Write briefly about why this is a successful plot.
+
+
+### load the libraries: We'll be using the plotrix package to make a 3D pie chart. 
+```{r}
+library(tidyr)
+library(tidyverse)
+library(tidytuesdayR)
+library(ggplot2)
+library(here)
+library(plotrix)
+library(ggmap)
+library(ggspatial)
+library(devtools)
+library(dplyr)
+library(ggimage)
+```
+
+
+## We're going to be working with _spooOOOoooky_ dataset from the TidyTuesdayR 
+```{r}
+spooky <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-10-10/haunted_places.csv')
+view(spooky)
+```
+# to make it so ugly we could make a pie chart of all the amount of haunted places in each state and make it 3d
+# could you also make the pie chart spin while the labels are moving?? it could be an animation
+# a pretty graph could look like a map of the us and overlay the haunted places, maybe add in a log base to show density of spookier places
+
+# Let's view the dataset!
+```{r}
+glimpse(spooky)
+```
+
+# Lets pull the state data from the dataset
+```{r}
+state <- map_data("state")
+head(state)
+```
+```{r}
+states <- us_map(regions="states")
+head(state)
+```
+
+# Were going to manipulate the data to count the occurances of each spooky place per state.
+```{r}
+spooky_places <- spooky %>%
+  count(state, state_abbrev, sort = TRUE) %>%
+  mutate(state = tolower(state))
+```
+
+#Needed to join the data sets so we can make the data workable! Used an inner join.
+# This created multiple rows of the same state for each coordinate that is needed per state.
+```{r}
+spooky_states<- state %>%
+  #mutate(region = str_to_title(region)) %>% #capitalize the state to match spooky data
+  rename(state = region) %>% #rename column to match the spooky_places data
+  inner_join(spooky_places) #join the two data sets together
+```
+# Were going to make a cute Halloween theme
+# Define Halloween color palette for fill
+```{r}
+halloween_palette <- c("#FF7518",  # dark orange
+                       "#6A0DAD",  # dark purple
+                       "#000000",  # black
+                       "#8B0000",  # dark red
+                       "#9932CC")  # dark orchid
+```
+
+
+
+
+make a good plot
+# what makes this plot good? look at readings from beginning of the semester
+```{r}
+median_value <- median(spooky_states$n)
+
+ggplot()+
+  geom_polygon(data = spooky_states,
+            aes(x = long,
+                y = lat,
+                group = group,
+                fill = n), color = "black") +
+  coord_map() + 
+  theme_void() +
+  scale_fill_gradient2(mid = 'orange',
+                       low = 'darkred',
+                       high = "black", midpoint = median_value, limits=c(-25, 1070)) +
+  labs(
+    title = "Haunted Places Across the U.S.",
+    subtitle = "A Spooky Overview",
+    fill = "Haunted Places Count"
+  )
+  
+  #lets add some more colors that are halloween themed
+#make a description why its good in text chunk 
+```
+
+# Lets change the theme to be something more halloween! 
+# Custom Halloween theme
+
+```{r}
+theme_halloween <- theme(
+  panel.background = element_rect(fill = "black", color = NA),
+  plot.background = element_rect(fill = "black", color = NA),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  axis.text = element_blank(),
+  axis.title = element_blank(),
+  legend.background = element_rect(fill = "black", color = "orange"),
+  legend.text = element_text(color = "orange"),
+  legend.title = element_text(color = "orange", face = "bold"),
+  plot.title = element_text(color = "orange", face = "bold", hjust = 0.5, size = 18),
+  plot.subtitle = element_text(color = "purple", hjust = 0.5, size = 12)
+)
+```
+
+
+
+# Example ggplot map with Halloween theme and palette
+```{r}
+ggplot(data = spooky_states) +
+  geom_polygon(aes(x = long, y = lat, group = group, fill = n), color = "black") +
+  scale_fill_manual(values = halloween_palette) +
+  theme_halloween +
+  labs(
+    title = "Haunted Places Across the U.S.",
+    subtitle = "A Spooky Overview",
+    fill = "Haunted Places Count"
+  )
+```
+
+
+# Bad plot
+
+#lets summarize the data to create a pie chart
+
+```{r}
+bad_plot <- ggplot(spooky_states, aes(x = "", y = n, fill = state)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y") +
+  labs(title = "Haunted Places by State") 
+```
+
+# Lets add it on top of an image
+
+```{r}
+super_ugly <- ggbackground(bad_plot, background ="../Data/81118061-xl-72dpi_360x.png")
+super_ugly
+```
+
+C:/Users/pirat/Downloads/81118061-xl-72dpi_360x.jpg

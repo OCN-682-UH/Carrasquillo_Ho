@@ -1,0 +1,190 @@
+---
+title: "Week_9_video"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## We're learning about FACTORS today! 
+
+# Load the libraries 
+```{r}
+library(tidyverse)
+library(here)
+library(forcats)
+library(ggplot2)
+library(gm)
+```
+
+# Load the data girl! 
+```{r}
+tuesdata <- tidytuesdayR::tt_load(2021, week = 7)
+#income_mean<-tuesdata$income_mean
+income_mean <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-02-09/income_mean.csv')
+
+```
+Factors are specialized characters and is how we store _categorical_ data. 
+Values that factors takes are called levels, which allow you to order your data in specific ways. They're defaulted to be alphabetical, which means we need to learn to use factors appropriately so we can reorder them for our specific analyses. 
+
+After a character is converted into a factor, R stores them as integers. So if you're not careful this can cause issues later!
+
+#### Let's make a vector in the function factor()
+```{r}
+fruits <- factor(c("Apple", "Grape", "Banana"))
+fruits
+```
+you'll notice when you run fruits as a line, it will automatically put it in alphabetical order. 
+
+An example of how it can be problematic...
+```{r}
+test<- c("A", "1", "2")
+as.numeric(test)
+```
+
+This would give you data that doens't even exist because it pulls "A" from _test_ as numeric...
+```{r}
+test<-factor(test)
+as.numeric(test)
+```
+This is why we use read_csv instead of read.csv, which reads all strings as factors. 
+Always use read_csv!!!
+
+## The forcats package is a family of functions for categorical data. All the main funtions start with fct_
+
+Lets look at a starwards dataset to learn how to use factors
+```{r}
+glimpse(starwars)
+```
+
+Now lets manipulate the starwars data by species.. How many individuals of each species are present across all starwars films?
+
+```{r}
+starwars %>%
+  filter(!is.na(species)) %>% # remove the NAs
+  count(species, sort = TRUE)
+```
+
+most are pretty rare with only one occurance. So lets lump together those into an others if they've occured less than 3x. 
+```{r}
+star_counts <- starwars %>% #name the df
+  filter(!is.na(species)) %>%
+  mutate(species = fct_lump(species, n = 3)) %>% #this will pull those species less than 3
+  count(species) #will count those species
+
+star_counts
+```
+
+#### Reordering Factors
+Let's make a basic plot...
+
+```{r}
+star_counts %>%
+  ggplot(aes(x= species, y = n)) +
+  geom_col()
+```
+We can definitely do better than this!
+fct_reorder(species, n) -> first you list what you want it to reorder by...
+
+```{r}
+star_counts %>%
+  ggplot(aes(x= fct_reorder(species, n), y = n)) + # reorder the factor of species by n
+  geom_col() +
+  labs(x = "Species")
+```
+
+Lets do a dataset thats 3dimensional!
+
+```{r}
+glimpse(income_mean)
+view(income_mean)
+```
+
+We're goin gto make a plot by the total income b year and quantiles across all dollar types
+```{r}
+total_income<-income_mean %>%
+  group_by(year, income_quintile) %>%
+  summarise(income_dollars_sum = sum(income_dollars)) %>%
+  mutate(income_quintile = factor(income_quintile)) #make it a factor
+```
+
+# now were going to make a basic plot
+
+```{r}
+total_income %>%
+  ggplot(aes(x = year, y = income_dollars_sum, color = income_quintile)) + 
+  geom_line()
+```
+
+Notice that the legend doesn't line up with what is showing in the graph. So we'll want to reorder that it makes the most sense & how the data is visualized. Let's reorder it by the x.
+
+```{r}
+total_income%>%
+  ggplot(aes(x = year, y = income_dollars_sum, 
+             color = fct_reorder2(income_quintile,year,income_dollars_sum)))+
+  geom_line()+
+  labs(color = "income quantile")
+```
+
+Lets reorder levels, just because. Not because its the largest value for example. We're going to look dates. 
+```{r}
+x1 <- factor(c("Jan", "Mar", "Apr", "Dec"))
+x1
+```
+In the factor function, we can set the specific order of the levels.
+
+```{r}
+x1 <- factor(c("Jan", "Mar", "Apr", "Dec"), levels = c("Jan", "Mar", "Apr", "Dec"))
+x1
+```
+Moving back to STARWARS! We want to group the species with <3 out!
+
+```{r}
+starwars_clean<- starwars %>%
+  filter(!is.na(species)) %>% #removes the NAs
+  count(species, sort = TRUE) %>%
+  mutate(species = factor(species)) %>% # make species a factor
+  filter(n>3) # only keep species that have more than 3
+
+starwars_clean
+```
+If we look at the levels for the starwars clean, you'll see that it's still in the dataset and will be showing.
+
+```{r}
+levels(starwars_clean$species)
+```
+
+so for the next step, you'll want to drop the extra levels so those filtered out dont show in the dataset still.
+As good practice, you should always add the droplevels so there are not secret NAs that pop up. 
+fct_drop() also does the same thing as droplevels()
+
+```{r}
+starwars_clean<- starwars %>%
+  filter(!is.na(species)) %>% #removes the NAs
+  count(species, sort = TRUE) %>%
+  mutate(species = factor(species)) %>% # make species a factor
+  filter(n>3) %>% # only keep species that have more than 3
+  droplevels() #drop extra levels
+
+levels(starwars_clean$species)
+```
+
+If you want to rename (or recode) a level you can do that!
+```{r}
+starwars_clean<- starwars %>%
+  filter(!is.na(species)) %>% #removes the NAs
+  count(species, sort = TRUE) %>%
+  mutate(species = factor(species)) %>% # make species a factor
+  filter(n>3) %>% # only keep species that have more than 3
+  droplevels() %>% #drop extra levels
+  mutate(species = fct_recode(species, "Humanoid" = "Human"))
+
+starwars_clean
+```
+Go through the assigned readings ! 
+
+Totally awesome R package allows you to generate music 
+

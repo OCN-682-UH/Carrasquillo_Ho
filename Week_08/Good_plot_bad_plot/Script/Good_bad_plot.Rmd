@@ -1,0 +1,137 @@
+---
+title: "Good Plot Bad Plot"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-23"
+output: 
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: true
+      
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE,
+                      warning=FALSE)
+```
+
+
+### Load the libraries
+```{r}
+library(tidyr)
+library(tidyverse)
+library(tidytuesdayR)
+library(ggplot2)
+library(here)
+library(ggmap)
+library(ggspatial)
+library(devtools)
+library(dplyr)
+library(ggimage)
+library(prettydoc)
+```
+
+
+## We're going to be working with _spooOOOoooky_ dataset from the TidyTuesdayR 
+```{r}
+spooky <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-10-10/haunted_places.csv')
+view(spooky)
+```
+
+### Lets pull the state data, so we can create a map.
+```{r}
+state <- map_data("state")
+head(state)
+```
+
+# Data Manipulation
+### We're going to manipulate the data to count the occurances of each spooky place per state.
+```{r}
+spooky_places <- spooky %>%
+  count(state, state_abbrev, sort = TRUE) %>%
+  mutate(state = tolower(state))
+```
+
+### We have to join the data sets so we can make the data workable! I used an inner join.
+```{r}
+spooky_states<- state %>%
+  #mutate(region = str_to_title(region)) %>% #capitalize the state to match spooky data
+  rename(state = region) %>% #rename column to match the spooky_places data
+  inner_join(spooky_places) #join the two data sets together
+
+view(spooky_states)
+
+  write.csv(here("Good_plot_bad_plot", "Data", "spooky_states.csv"))
+```
+
+# Make your plots!
+
+## Bad Plot: 
+Our task was to make Nyssa and everyone cry from how *bad* our ugly plot is....
+Ready to cry your eyes out?
+
+```{r}
+
+#I want to make an ugly pie chart that shows the count of spooky places per state. 
+bad_plot <- ggplot(spooky_states, aes(x = "", y = n, fill = state)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y") +
+  labs(title = "Haunted Places by State") +
+ theme(
+    plot.title = element_text(color = "orange", hjust = 0.5),
+    axis.title.y = element_text(color = "white"),
+    axis.title.x = element_text(color = "white") # Set title color to white
+  )
+super_ugly <- ggbackground(bad_plot, background ="../Data/81118061-xl-72dpi_360x.png")
+super_ugly
+
+ggsave(filename = here("Good_plot_bad_plot", "Output", "super_ugly.png"))
+```
+
+### Why would we never make a plot like this ever, _ever again?_
+* We absolutely hate pie charts. There are never exceptions for creating a pie chart. 
+* The image background is absolutely horrific. Not because of the amount of patriotism, but because it makes the data completely unreadable. We love patriotism....**GO VOTE!!!!!**
+* The axis labels are white, which make it readable, but we can't see the other values along the pie chart.
+* Each state has its own color, which makes it confusing to read. 
+* The count of spooky places per state has been log transformed and that makes it unclear which state has the highest count of spooky places.
+
+Now that we're crying and know why we're crying. Let's move onto our _good and beautiful_ plot. :)
+
+## Good Plot: 
+
+```{r}
+#I'm making a median value so the color gradient looks better! :)
+median_value <- median(spooky_states$n)
+
+#Let's make a map and look at the count of spooky places in each state.
+ggplot()+
+  geom_polygon(data = spooky_states,
+            aes(x = long,
+                y = lat,
+                group = group,
+                fill = n), color = "black") +
+  coord_map() + 
+  theme_void() +
+  scale_fill_gradient2(mid = 'orange',
+                       low = 'darkred',
+                       high = "black", midpoint = median_value, limits=c(-25, 1070)) +
+  theme(plot.title = element_text(color = "orange", hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)) +
+  labs(title = "Haunted Places Across the U.S.", 
+    subtitle = "A Spooky Overview",
+    fill = "Haunted Places Count"
+  )
+
+#Save the plot now
+ggsave(filename = here("Good_plot_bad_plot", "Output", "super_beautiful.png"))
+
+```
+
+### Why is this plot so good?
+* This plot has clear labels!
+* Legend includes a color gradient, which shows which state has the highest count of spooky places.
+* Image is clear and easy to decipher. You can tell that California is the spookiest state in the U.S.
+
+

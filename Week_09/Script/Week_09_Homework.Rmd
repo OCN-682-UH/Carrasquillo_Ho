@@ -1,0 +1,18 @@
+---
+title: "Week_09_Homework"
+author: "Solimar Carrasquillo Ho"
+date: "2024-10-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Use any dataset you would like and make two useful functions. One that is a plot and one that is not. Turn in your functions using RMarkdown with at least 2 examples per function showing its flexibility. Due, as always, at 1pm on Tuesday.
+
+## Homework tasks 
+you have to make two useful functions 
+
+
+
