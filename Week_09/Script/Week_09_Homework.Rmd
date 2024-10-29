@@ -1,7 +1,7 @@
 ---
 title: "Week_09_Homework"
 author: "Solimar Carrasquillo Ho"
-date: "2024-10-23"
+date: "2024-10-29"
 output: html_document
 ---
 
@@ -14,5 +14,75 @@ Use any dataset you would like and make two useful functions. One that is a plot
 ## Homework tasks 
 you have to make two useful functions 
 
+## Load the libraries
+```{r}
+library(ggplot2)
+library(devtools)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+```
 
+## Load the dataset
+```{r}
+cheeses <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-06-04/cheeses.csv')
+view(cheeses)
+```
+
+## Data Manipulation
+### I want to look at the cheese types, but noticed there are multiple types of animals in the milk column. We'll need to separate this to make the data usable! 
+
+The first function will clean the data and create a count of how many cheeses per country. 
+1. first function to pull names of cheese and country
+2. second function to pull from first function to get animal milk
+```{r}
+cheese_cleaned <- function(data, specific_country = NULL){ data %>%
+  separate_rows(country, sep = ", ") %>% #separate country into new rows
+  filter(is.null(specific_country)| country == specific_country) %>% #Filter for specific country
+  group_by(country)
+}
+```
+
+Pull the France cheeses! 
+
+```{r}
+France_cheese <- cheese_cleaned(cheeses, "France")
+```
+
+The Italy cheeses! 
+
+```{r}
+Italy_cheese <- cheese_cleaned(cheeses, "Italy")
+```
+
+
+```{r}
+# Count cheese types based on milk
+  cheese_counts <- function(data) {
+    group_by(milk) %>%
+    summarise(cheese_count = n(), .groups = "drop") # Count of cheeses per milk type
+  }
+```
+
+
+# Create the function that will make a plot!
+
+```{r}
+plot_milk_by_cheese_type <- function(data) {
+  # Create the plot
+ ggplot(cheese_counts, aes(x = reorder(milk, cheese_count), y = cheese_count)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(title = "Types of Animal Milk Used in French Cheeses",
+         x = "Type of Milk",
+         y = "Number of Cheeses") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+```
+
+Now make the plot! 
+
+```{r}
+plot_milk_by_cheese_type(France_cheese)
+```
 
