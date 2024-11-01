@@ -1,0 +1,94 @@
+---
+title: "Week_09_homework"
+author: "Solimar Carrasquillo Ho"
+date: "2024-11-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Homework is due on 11/2! 
+
+Will have to work with words to clean up issues with character data to reorder factors into orders that make sense. 
+
+column names could be better named. 
+
+* make a plot where one of the axes is a factor
+* use either intertidal.csv r intetidal_latitude.csv (include data dictionary)
+* if choosing to visualize anything by tide height, it should go from low to mid to high tide. 
+
+use stringr package to clean names 
+
+# load the libraries
+```{r}
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+library(here)
+library(janitor) #to clean the data
+library(tidytext)
+```
+
+
+
+# load the data
+```{r}
+intertidal_lat <- read_csv(here("Week_09", "Data","intertidaldata_latitude.csv"))
+head(intertidal_lat)
+intertidal <- read_csv(here("Week_09", "Data","intertidaldata.csv"))
+head(intertidal)
+```
+
+# Data Cleaning!
+
+Some columns include (count), and quadrat columns have extra numbers or spaces. 
+```{r}
+clean_intertidal <- intertidal %>%
+  clean_names() %>%
+  mutate(quadrat = str_remove_all(quadrat, "[\\.0-9\\s]")) #line will remove unwanted characters 
+view(clean_intertidal)
+```
+
+Cute! We have to make the axis a factor, so we'll pick the quadrats! We only want to look at a select part of the data so we can continue manipulating here...
+
+```{r}
+quadrat <- clean_intertidal %>%
+  pivot_longer(cols = c(bare_rock: anemone), #put all organisms into one column
+               names_to = "Cover",
+               values_to = "Percent") %>% 
+  filter(site == "Bodega") %>% #lets only look at one location
+  select(c(site, transect, quadrat, Cover, Percent)) %>%
+  mutate(quadrat = factor(quadrat)) %>% # we need to convert this into a factor :)
+  droplevels()  #always add droplevels
+
+#we're adding this line in to reorder the axis lable!
+quadrat$quadrat <- factor(quadrat$quadrat, levels = c("Low", "Mid", "High"))
+
+  
+```
+
+Sweeeet! Now we can really make the plot. 
+```{r}
+ggplot(quadrat,
+       aes(x = Cover,
+           y = Percent,
+           fill = quadrat)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Intertidal Organism Coverage at Bodega",
+       x = "Intertidal Organisms",
+       y = "Total Percent Cover (%)",
+       fill = "Tide") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(
+   labels = c("algae" = "Algae",
+               "anemone" = "Anemone",
+               "bare_rock" = "Bare Rock",
+               "gooseneck_barnacles" = "Gooseneck Barnacles",
+               "large_barnacles" = "Large Barnacles",
+               "mussels" = "Mussels",
+               "small_barnacles" = "Small Barnacles"))
+```
+
