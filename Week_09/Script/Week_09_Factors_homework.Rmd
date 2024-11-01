@@ -69,7 +69,8 @@ quadrat$quadrat <- factor(quadrat$quadrat, levels = c("Low", "Mid", "High"))
   
 ```
 
-Sweeeet! Now we can really make the plot. 
+Sweeeet! Now we can really make the plot.
+#Make a plot w/ a factor as the axis. 
 ```{r}
 ggplot(quadrat,
        aes(x = Cover,
