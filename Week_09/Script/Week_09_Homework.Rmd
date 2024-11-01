@@ -32,12 +32,19 @@ view(cheeses)
 ## Data Manipulation
 ### I want to look at the cheese types, but noticed there are multiple types of animals in the milk column. We'll need to separate this to make the data usable! 
 
+Separate all rows from data set. 
+
+```{r}
+all_cheese <- cheeses %>%
+  separate_rows(country, sep = ", ") %>%
+  separate_rows(milk, sep = ", ")
+```
+
 The first function will clean the data and create a count of how many cheeses per country. 
 1. first function to pull names of cheese and country
 2. second function to pull from first function to get animal milk
 ```{r}
 cheese_cleaned <- function(data, specific_country = NULL){ data %>%
-  separate_rows(country, sep = ", ") %>% #separate country into new rows
   filter(is.null(specific_country)| country == specific_country) %>% #Filter for specific country
   group_by(country)
 }
@@ -49,40 +56,120 @@ Pull the France cheeses!
 France_cheese <- cheese_cleaned(cheeses, "France")
 ```
 
-The Italy cheeses! 
+
+
+What about creating a function to find out more about cheeses for those w/ dietary preferences?
 
 ```{r}
-Italy_cheese <- cheese_cleaned(cheeses, "Italy")
-```
-
-
-```{r}
-# Count cheese types based on milk
-  cheese_counts <- function(data) {
-    group_by(milk) %>%
-    summarise(cheese_count = n(), .groups = "drop") # Count of cheeses per milk type
+filter_cheeses <- function(data, milk = NULL, country = NULL, vegan = NULL, vegetarian = NULL) {
+  
+  # Start with the full dataset
+  filtered_data <- data
+  
+  # Apply milk type filter if specified
+  if (!is.null(milk)) {
+    filtered_data <- filtered_data[filtered_data$milk == milk, ]
   }
+  
+  # Apply country filter if specified
+  if (!is.null(country)) {
+    filtered_data <- filtered_data[filtered_data$country == country, ]
+  }
+  
+  # Apply vegan filter if specified
+  if (!is.null(vegan)) {
+    filtered_data <- filtered_data[filtered_data$vegan == vegan, ]
+  }
+  
+  # Apply vegetarian filter if specified
+  if (!is.null(vegetarian)) {
+    filtered_data <- filtered_data[filtered_data$vegetarian == vegetarian, ]
+  }
+  
+  # Return the filtered dataset
+  return(filtered_data)
+}
+
+
 ```
+
+Now let's start using that filter! 
+```{r}
+french_vegetarian_cow_cheeses <- filter_cheeses(data = cheeses, country = "France", milk = "cow", vegetarian = TRUE)
+
+print(french_vegetarian_cow_cheeses)
+
+```
+
 
 
 # Create the function that will make a plot!
+```{r}
+plot_cheeses_by_milk_and_country <- function(data) {
+  #Count cheeses by milk type and country
+  milk_counts <- data %>%
+    count(country, milk, name = "count")
+  
+  #Make a plot
+  ggplot(milk_counts, aes(x = country, y = count, color = milk)) +
+    geom_point(size = 3) +
+    labs(
+      title = "Number of Cheeses by Milk Type and Country",
+      x = "Country",
+      y = "Number of Cheeses"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+    scale_color_brewer(palette = "Set1")  # Optional: Use a color palette for milk types
+}
+
+# Example usage:
+# plot_cheeses_by_milk_and_country(cheeses)
+
+
+```
+
+
+Now lets make the plot! 
+```{r}
+plot_cheeses_by_milk_and_country(all_cheese)
+
+```
+
+This is a little messy...so let's add a filter that will only look at the countries that have more than 30 types of cheeses....
 
 ```{r}
-plot_milk_by_cheese_type <- function(data) {
-  # Create the plot
- ggplot(cheese_counts, aes(x = reorder(milk, cheese_count), y = cheese_count)) +
-    geom_bar(stat = "identity", fill = "skyblue") +
-    labs(title = "Types of Animal Milk Used in French Cheeses",
-         x = "Type of Milk",
-         y = "Number of Cheeses") +
+plot_cheeses_by_milk_and_country <- function(data) {
+  # Step 1: Count total cheeses by country
+  country_counts <- table(data$country)
+  
+  # Step 2: Filter countries with more than 20 cheeses
+  countries_with_more_than_30 <- names(country_counts[country_counts > 30])
+  
+  # Step 3: Count cheeses by milk type and country for filtered countries
+  milk_counts <- as.data.frame(table(data$country[data$country %in% countries_with_more_than_30],
+                                      data$milk[data$country %in% countries_with_more_than_30]))
+  
+  colnames(milk_counts) <- c("country", "milk", "count")
+  
+  # Step 4: Create a scatter plot
+  ggplot(milk_counts, aes(x = country, y = count, color = milk)) +
+    geom_point(size = 3) +
+    labs(
+      title = "Number of Cheeses by Milk Type and Country (Countries with >30 Cheeses)",
+      x = "Country",
+      y = "Number of Cheeses"
+    ) +
     theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+    scale_color_brewer(palette = "Set1")  # Optional: Use a color palette for milk types
 }
 ```
 
-Now make the plot! 
+run it!
 
 ```{r}
-plot_milk_by_cheese_type(France_cheese)
+plot_cheeses_by_milk_and_country(all_cheese)
+
 ```
 
