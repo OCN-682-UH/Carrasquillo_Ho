@@ -15,6 +15,7 @@ describe what was learned in that week's tidy tuesday.
 
 # Libraries
 ```{r}
+library(here)
 library(tidyverse)
 library(janitor) #to clean the data 
 library(ggplot2)
@@ -96,12 +97,18 @@ I'm having problems creating a plot because I removed the spaces from the column
 female_president_df <- democracy_df %>%
   filter(is_female_president == TRUE) %>%
   group_by(president_name, country_name) %>%
-  summarise(total_years_served = n(), .groups = "drop")
+  summarise(total_years_served = n(), .groups = "drop") %>%
+  arrange(desc(total_years_served)) %>%  # Sort by total years served in descending order
+  distinct(president_name, .keep_all = TRUE) %>%  # Remove duplicates, keeping only the first occurrence of each president
+  slice_head(n = 10)
 
 female_monarch_df <- democracy_df %>%
   filter(is_female_monarch == TRUE) %>%
   group_by(monarch_name, country_name) %>%
-  summarise(total_years_served = n(), .groups = "drop")
+  summarise(total_years_served = n(), .groups = "drop") %>%
+  arrange(desc(total_years_served)) %>%  # Sort by total years served in descending order
+  distinct(monarch_name, .keep_all = TRUE) %>%  # Remove duplicates, keeping only the first occurrence of each monarch
+  slice_head(n = 10)
 
 ```
 
@@ -110,20 +117,26 @@ female_monarch_df <- democracy_df %>%
 We're going to try to learn how to make a lollipop plot this week.
 I try and create two lollipop plots to show the length of each female leader. 
 
+
+Add country name in the bubble at the end!
+
 ```{r}
+
 # Combine monarch and country names for better labeling
 female_monarch_clean <- female_monarch_df %>%
   mutate(monarch_country = paste(monarch_name, "(", country_name, ")", sep = ""))
 
-# Create the lollipop plot
-ggplot(female_monarch_clean, aes(x = reorder(monarch_country, total_years_served), y = total_years_served)) +
-  geom_segment(aes(x = monarch_country, xend = monarch_country, y = 0, yend = total_years_served), color = "skyblue") +
+
+# Create the lollipop plot without country name next to leader name
+plot1 <- ggplot(female_monarch_clean, aes(x = reorder(monarch_name, total_years_served), y = total_years_served)) +
+  geom_segment(aes(x = monarch_name, xend = monarch_name, y = 0, yend = total_years_served), color = "skyblue") +
   geom_point(color = "darkblue", size = 4) +
+  geom_text(aes(label = country_name), vjust = -0.5, hjust = 0.5, color = "black", size = 3) +  # Add country name inside bubble
   coord_flip() +  # Flip coordinates for readability
   labs(
     title = "Years of Service by Female Monarchs", 
-    caption = "Source: Deomocracy and Dictatorship Dataset TidyTuesday 2024-11-05",
-    x = "Monarch Country",
+    caption = "Source: Democracy and Dictatorship Dataset TidyTuesday 2024-11-05",
+    x = "Monarch Name",  # Display only the monarch's name
     y = "Total Years Served"
   ) +
   theme_minimal() +
@@ -131,23 +144,26 @@ ggplot(female_monarch_clean, aes(x = reorder(monarch_country, total_years_served
     plot.title = element_text(hjust = 0.5, size = 15),
     axis.title = element_text(size = 12)
   )
+
 ```
+
 Let's do it for female presidents! 
 
 ```{r}
-# Combine monarch and country names for better labeling
+# Combine president and country names for better labeling
 female_president_clean <- female_president_df %>%
   mutate(president_country = paste(president_name, "(", country_name, ")", sep = ""))
 
 # Create the lollipop plot
-ggplot(female_president_clean, aes(x = reorder(president_country, total_years_served), y = total_years_served)) +
-  geom_segment(aes(x = president_country, xend = president_country, y = 0, yend = total_years_served), color = "skyblue") +
+plot1 <- ggplot(female_president_clean, aes(x = reorder(president_name, total_years_served), y = total_years_served)) +
+  geom_segment(aes(x = president_name, xend = president_name, y = 0, yend = total_years_served), color = "skyblue") +
   geom_point(color = "darkblue", size = 4) +
+  geom_text(aes(label = country_name), vjust = -0.5, hjust = 0.5, color = "black", size = 3) +  # Add country name inside bubble
   coord_flip() +  # Flip coordinates for readability
   labs(
-    title = "Years of Service by Female President",
-    caption = "Source: Deomocracy and Dictatorship Dataset TidyTuesday 2024-11-05",
-    x = "President Country",
+    title = "Years of Service by Female presidents", 
+    caption = "Source: Democracy and Dictatorship Dataset TidyTuesday 2024-11-05",
+    x = "president Name",  # Display only the president's name
     y = "Total Years Served"
   ) +
   theme_minimal() +
@@ -155,6 +171,19 @@ ggplot(female_president_clean, aes(x = reorder(president_country, total_years_se
     plot.title = element_text(hjust = 0.5, size = 15),
     axis.title = element_text(size = 12)
   )
+
+print(plot2)
+```
+Now let's use the patchwork to put the two plots next to each other :).
+
+```{r}
+plot1 / plot2
+```
+Finally, we're going to save the plot so we can actually see them! 
+
+```{r}
+ggsave(here("Tidy_Tuesday", "Output", "female_leaders.png"))
 ```
 
-For this week, I learned how to make tables (again) and how to utilize lollipop plots. I think I should have filtered the data more to show the monarchs 
+
+For this week, I learned how to make tables (again) and how to utilize lollipop plots. I think I should have filtered the data more to show less countries. It could be more informative. 
