@@ -1,0 +1,160 @@
+---
+title: "Tidy Tuesday 2024-11-05"
+author: "Solimar Carrasquillo Ho"
+date: "2024-11-10"
+output: html_document
+---
+
+Tidy tuesday rubric:
+
+dataset
+export knitted file
+plot and export 
+place proper code in folder
+describe what was learned in that week's tidy tuesday.
+
+# Libraries
+```{r}
+library(tidyverse)
+library(janitor) #to clean the data 
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(knitr) #use to make a table
+library(kableExtra)
+library(patchwork)
+```
+
+
+# Load the data. We're going to be looking at the _Democracy and Dictatorship_ dataset from TidyTuesday Nov. 5th 2024.
+```{r}
+democracy_data <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-11-05/democracy_data.csv')
+View(democracy_data)
+
+```
+
+I'm curious to know the progression of female leadership over these democracies. 
+```{r}
+democracy_df <- democracy_data %>%
+  select("country_name", "year", "regime_category", "is_monarchy", "monarch_name", "monarch_accession_year", "is_democracy", "is_presidential", "president_name", "president_accesion_year", "is_female_monarch", "is_female_president") 
+
+print(democracy_df)
+```
+
+# Data mining and cleaning 
+
+Should I try making a table to summarize all the female leaders? I haven't practiced creating tables since we've learned about them in class. 
+We're going to rename the columns too.
+
+```{r}
+
+# Group by leader and country, and count the number of years served
+female_monarch <- democracy_df %>%
+  filter(is_female_monarch == TRUE) %>%
+  group_by(monarch_name, country_name) %>%
+  summarise(total_years_served = n(), .groups = "drop")
+
+  colnames(female_monarch) <- colnames(female_monarch) %>%
+  str_replace_all("_", " ") %>%  # Replace underscores with spaces
+  str_to_title()     
+
+# View the resulting dataset with total years served for each leader
+print(female_monarch)
+
+
+```
+Female presidents 
+```{r}
+female_president <- democracy_df %>%
+  filter(is_female_president == TRUE) %>%
+  group_by(president_name, country_name) %>%
+  summarise(total_years_served = n(), .groups = "drop")
+
+colnames(female_president) <- colnames(female_president) %>%
+  str_replace_all("_", " ") %>%  # Replace underscores with spaces
+  str_to_title()     
+
+# View the resulting dataset with total years served for each leader
+print(female_president)
+```
+
+
+
+
+Lets make a table of Monarch using the knitr package.
+```{r}
+kable(female_monarch, format = "html", caption = "Female Monarch")
+```
+
+Now for the presidents!
+```{r}
+kable(female_president, format = "html", caption = "Female President")
+```
+I'm having problems creating a plot because I removed the spaces from the column titles, so I'm going to add them back in so I can make my plot!
+
+```{r}
+female_president_df <- democracy_df %>%
+  filter(is_female_president == TRUE) %>%
+  group_by(president_name, country_name) %>%
+  summarise(total_years_served = n(), .groups = "drop")
+
+female_monarch_df <- democracy_df %>%
+  filter(is_female_monarch == TRUE) %>%
+  group_by(monarch_name, country_name) %>%
+  summarise(total_years_served = n(), .groups = "drop")
+
+```
+
+
+
+We're going to try to learn how to make a lollipop plot this week.
+I try and create two lollipop plots to show the length of each female leader. 
+
+```{r}
+# Combine monarch and country names for better labeling
+female_monarch_clean <- female_monarch_df %>%
+  mutate(monarch_country = paste(monarch_name, "(", country_name, ")", sep = ""))
+
+# Create the lollipop plot
+ggplot(female_monarch_clean, aes(x = reorder(monarch_country, total_years_served), y = total_years_served)) +
+  geom_segment(aes(x = monarch_country, xend = monarch_country, y = 0, yend = total_years_served), color = "skyblue") +
+  geom_point(color = "darkblue", size = 4) +
+  coord_flip() +  # Flip coordinates for readability
+  labs(
+    title = "Years of Service by Female Monarchs", 
+    caption = "Source: Deomocracy and Dictatorship Dataset TidyTuesday 2024-11-05",
+    x = "Monarch Country",
+    y = "Total Years Served"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.title = element_text(size = 12)
+  )
+```
+Let's do it for female presidents! 
+
+```{r}
+# Combine monarch and country names for better labeling
+female_president_clean <- female_president_df %>%
+  mutate(president_country = paste(president_name, "(", country_name, ")", sep = ""))
+
+# Create the lollipop plot
+ggplot(female_president_clean, aes(x = reorder(president_country, total_years_served), y = total_years_served)) +
+  geom_segment(aes(x = president_country, xend = president_country, y = 0, yend = total_years_served), color = "skyblue") +
+  geom_point(color = "darkblue", size = 4) +
+  coord_flip() +  # Flip coordinates for readability
+  labs(
+    title = "Years of Service by Female President",
+    caption = "Source: Deomocracy and Dictatorship Dataset TidyTuesday 2024-11-05",
+    x = "President Country",
+    y = "Total Years Served"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.title = element_text(size = 12)
+  )
+```
+
+For this week, I learned how to make tables (again) and how to utilize lollipop plots. I think I should have filtered the data more to show the monarchs 
