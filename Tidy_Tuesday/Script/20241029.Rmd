@@ -90,7 +90,7 @@ ggplot(scary_monsters,
 
 Now lets save our plot!
 ```{r}
-ggsave(here("Tidy_Tuesday", "Output", "20241029_monstermovies.png"), plot = last_plot(), height = 8, width = 7)
+anim_save(here("Tidy_Tuesday", "Output", "20241029_monstermovies.gif"), plot = last_plot(), height = 8, width = 7)
 
 ```
 
