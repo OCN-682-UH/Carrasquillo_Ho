@@ -1,0 +1,12 @@
+name: Week_11_Homework
+title: Week_11_Homework
+username: solimarc
+account: solimarc
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13377161
+bundleId: 9382249
+url: https://solimarc.shinyapps.io/Week_11_Homework/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
