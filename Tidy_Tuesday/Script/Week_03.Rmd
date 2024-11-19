@@ -1,0 +1,25 @@
+---
+title: "Week_03_TidyTuesday"
+author: "Solimar Carrasquillo Ho"
+date: "2024-11-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load the libraries
+```{r}
+library(ISOcodes)
+library(tidyverse)
+library(janitor)
+library(tidytuesdayR)
+```
+
+
+# Load the data
+```{r}
+iso <- tidytuesdayR::tt_load(2024, week = 46)
+```
+

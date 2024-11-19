@@ -1,0 +1,81 @@
+---
+title: "Week_3_TidyTuesday"
+author: "Solimar Carrasquillo Ho"
+date: "2024-11-18"
+output: html_document
+---
+
+# Libraries
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(maps)
+library(tidyverse)
+library(here)
+library(mapdata)
+library(mapproj)
+library(dplyr)
+library(leaflet) #to make interactive maps
+library(sf) #to viz spatial data 
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+```
+
+
+# Load up the data
+```{r}
+countries <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-11-12/countries.csv')
+View(countries)
+```
+
+# Ideas for this week....make a map and use leaflet package to hover over countries to show their codes?? Or use sf package to create a shape!
+
+# Can we create a map for the entire world? 
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+
+# Create a world map
+leaflet(data = world) %>%
+  addTiles() %>%  # Add default OpenStreetMap tiles
+  addPolygons(
+    fillColor = "lightblue",      # Fill color for polygons
+    color = "darkblue",           # Border color for polygons
+    weight = 1,                   # Border thickness
+    fillOpacity = 0.6,            # Transparency of fill
+    label = ~iso_a3,              # Show ISO code on hover
+    labelOptions = labelOptions(
+      style = list("font-weight" = "bold"), # Bold text for hover labels
+      textsize = "12px",                    # Text size for labels
+      direction = "auto"                    # Automatically adjust label direction
+    )
+  ) %>%
+  setView(lng = 0, lat = 20, zoom = 2)  # Center the map globally with a world view
+
+
+```
+
+# set a zoom limit
+```{r}
+leaflet(data = world) %>%
+  addTiles(options = tileOptions(maxZoom = 10, minZoom = 2)) %>%  # Set max and min zoom levels
+  addPolygons(
+    fillColor = "lightblue",      # Fill color for polygons
+    color = "darkblue",           # Border color for polygons
+    weight = 1,                   # Border thickness
+    fillOpacity = 0.6,            # Transparency of fill
+    label = ~iso_a3,              # Show ISO code on hover
+    labelOptions = labelOptions(
+      style = list("font-weight" = "bold"), # Bold text for hover labels
+      textsize = "12px",                    # Text size for labels
+      direction = "auto"                    # Automatically adjust label direction
+    )
+  ) %>%
+  setView(lng = 0, lat = 20, zoom = 2)  # Center the map globally with a world view
+
+```
+
+
+# I don't think we can create a
