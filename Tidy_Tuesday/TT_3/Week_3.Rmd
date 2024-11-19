@@ -20,7 +20,7 @@ library(leaflet) #to make interactive maps
 library(sf) #to viz spatial data 
 library(rnaturalearth)
 library(rnaturalearthdata)
-
+library(htmltools)
 ```
 
 
@@ -30,9 +30,9 @@ countries <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytue
 View(countries)
 ```
 
-# Ideas for this week....make a map and use leaflet package to hover over countries to show their codes?? Or use sf package to create a shape!
+### Ideas for this week....make a map and use leaflet package to hover over countries to show their codes?? Or use sf package to create a shape!
 
-# Can we create a map for the entire world? 
+#### Can we create a map for the entire world? 
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
@@ -55,12 +55,13 @@ leaflet(data = world) %>%
   setView(lng = 0, lat = 20, zoom = 2)  # Center the map globally with a world view
 
 
+
 ```
 
-# set a zoom limit
+### Let's set a zoom limit so that way we can't zoom out forever. 
 ```{r}
 leaflet(data = world) %>%
-  addTiles(options = tileOptions(maxZoom = 10, minZoom = 2)) %>%  # Set max and min zoom levels
+  addTiles(options = tileOptions(maxZoom = 10, minZoom = 2)) %>%
   addPolygons(
     fillColor = "lightblue",      # Fill color for polygons
     color = "darkblue",           # Border color for polygons
@@ -73,9 +74,9 @@ leaflet(data = world) %>%
       direction = "auto"                    # Automatically adjust label direction
     )
   ) %>%
-  setView(lng = 0, lat = 20, zoom = 2)  # Center the map globally with a world view
-
+  setView(lng = 0, lat = 20, zoom = 2) %>% # Center the map 
+  
+  # Add title as part of the map output
+  htmlwidgets::prependContent(tags$h1("World Map with ISO Codes", 
+                                       style = "text-align: center; font-family: Arial; color: darkblue;"))
 ```
-
-
-# I don't think we can create a
