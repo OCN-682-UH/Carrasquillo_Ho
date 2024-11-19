@@ -17,7 +17,6 @@ library(DT) # For interactive data tables
 
 #Data loading. We picked a vday themed dataset bc i'm a lover girl at heart!
 valentine_data <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-02-13/gifts_age.csv')
-View(valentine_data)
 
 #Let's make a bar graph for our dynamic figure. I want to be able to toggle between the age groups!
 #I want to modify code using one of the demos from the shiny.posit.co
@@ -80,4 +79,4 @@ server <- function(input, output) {
 # Run the application
 shinyApp(ui = ui, server = server)
 
-deployApp() #runs the app and updates automatically
+#deployApp() #runs the app and updates automatically

@@ -5,7 +5,7 @@ account: solimarc
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 13356185
-bundleId: 9382790
+bundleId: 9388663
 url: https://solimarc.shinyapps.io/VDay/
 version: 1
 asMultiple: FALSE
