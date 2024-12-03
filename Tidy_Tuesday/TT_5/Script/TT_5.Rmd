@@ -1,0 +1,189 @@
+---
+title: "TT_5"
+author: "Solimar Carrasquillo Ho"
+date: "2024-12-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#loading the libraries
+```{r}
+library(ggplot2)
+library(showtext) #easier way to use new fonts
+library(tidyr)
+library(dplyr)
+library(here)
+```
+
+
+# Load in the data! 
+
+```{r}
+cbp_resp <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2024/2024-11-26/cbp_resp.csv')
+View(cbp_resp)
+```
+
+# If I have time I want to learn to use google fonts
+I've loaded in the package showtext, which we can use the following webpage to search available texts 
+https://fonts.google.com/
+
+```{r}
+font_add_google("Bungee", "bungee")
+showtext_auto()
+showtext_opts(dpi=300)
+
+body_font <- "bungee"
+```
+
+
+# data cleaning. Let's look at immigration from central america  
+
+```{r}
+data <- cbp_resp %>%
+  select(fiscal_year, citizenship, encounter_type, demographic, title_of_authority, encounter_count)
+View(data)
+```
+
+Filter out our central american countries.
+going to do just mexico and venezula! 
+```{r}
+central_america <- data %>%
+    filter(citizenship %in% c("MEXICO", "VENEZUELA")) %>% #"COLOMBIA",  "HONDURAS", "GUATEMALA", "EL SALVADOR")) %>%
+  filter(encounter_count != 0) %>%   #remove if any of the encounter_count was 0 
+  mutate(citizenship = str_to_title(citizenship)) #remove all caps
+
+view(central_america)
+```
+
+
+# lets calculate the total encounter_count for each country
+```{r}
+count <- central_america %>% 
+  group_by(fiscal_year, citizenship, encounter_type) %>%
+  summarise(
+    total_encounters = sum(encounter_count), .groups = 'drop'
+  ) %>%
+  mutate(
+    lower_bound = total_encounters * 0.9, # 10% below total_encounters
+    upper_bound = total_encounters * 1.1  # 10% above total_encounters
+  )
+
+
+
+view(count)
+```
+
+
+
+
+# lets make an easy plot
+```{r}
+map <- ggplot(count, aes(x = fiscal_year, y = total_encounters)) +
+  geom_line(aes(color = citizenship), size = 1) +  # Line plot for values
+  geom_point(aes(color = citizenship), size = 2) + # Points on the line
+  facet_wrap(~ citizenship, ncol = 2) +                      # Facet by country
+  labs(
+    title = "Fiscal Year Trends by Country",
+    x = "Fiscal Year",
+    y = "Total Encounters",
+    color = "Country"
+  ) +
+  theme_minimal() +                            # Use a clean theme
+  theme(
+    strip.text = element_text(size = 3, face = "bold"), # Customize facet labels
+    axis.text.x = element_text(angle = 45, hjust = 1)   # Rotate x-axis labels
+  )
+
+map
+```
+
+
+# Now I want to try learning how to make a ribbon plot. 
+# In order to make a ribbon plot, you'll need to create an lower and upper bound...
+```{r}
+ggplot(count, aes(x = fiscal_year, y = total_encounters, group = encounter_type)) +
+  geom_ribbon(aes(ymin = lower_bound, ymax = upper_bound, fill = encounter_type), alpha = 0.3) + # Ribbon
+  geom_line(aes(color = encounter_type), size = 1) +  # Line plot for mean total_encounters
+  geom_point(aes(color = encounter_type), size = 2) + # Points for total_encounters
+  labs(
+    title = "Immigration Encounters Over Time by Citizenship",
+    x = "Fiscal Year",
+    y = "Total Encounters",
+    fill = "Encounter Type",
+    color = "Encounter Type"
+  ) +
+  facet_wrap(~ citizenship, ncol = 2) +  # Facet wrap by citizenship with 3 columns
+  theme_minimal() + # Clean theme
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12, face = "bold") # Adjust facet label size
+  )
+
+```
+# trying to remove the log
+```{r}
+ggplot(count, aes(x = fiscal_year, y = total_encounters, group = encounter_type)) +
+  geom_ribbon(aes(ymin = lower_bound, ymax = upper_bound, fill = encounter_type), alpha = 0.3) + # Ribbon
+  geom_line(aes(color = encounter_type), size = 1) +  # Line plot
+  geom_point(aes(color = encounter_type), size = 2) + # Points
+  labs(
+    title = "Immigration Encounters Over Time by Citizenship",
+    x = "Fiscal Year",
+    y = "Total Encounters",
+    fill = "Encounter Type",
+    color = "Encounter Type"
+  ) +
+  facet_wrap(~ citizenship, ncol = 3) +  # Facet by citizenship with 3 columns
+  scale_y_continuous(labels = scales::comma) +  # Ensure linear scale with comma-separated values
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12, face = "bold")
+  )
+
+```
+```{r}
+plot <- ggplot(count, aes(x = fiscal_year, y = total_encounters, group = encounter_type)) +
+  geom_ribbon(aes(ymin = lower_bound, ymax = upper_bound, fill = encounter_type), alpha = 0.3) + # Ribbon
+  geom_line(aes(color = encounter_type), size = 1) +  # Line plot for mean total_encounters
+  geom_point(aes(color = encounter_type), size = 2) + # Points for total_encounters
+  labs(
+    title = "Immigration Encounters Over Time by Citizenship",
+    x = "Fiscal Year",
+    y = "Total Encounters",
+    fill = "Encounter Type",
+    color = "Encounter Type"
+  ) +
+  facet_wrap(~ citizenship, ncol = 3) +  # Facet wrap by citizenship
+  scale_y_continuous(labels = scales::comma) +  # Linear scale for y-axis
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 11),  # Reduced title size by 3 points
+    axis.title.x = element_text(size = 11), # Reduced x-axis label size by 3 points
+    axis.title.y = element_text(size = 11), # Reduced y-axis label size by 3 points
+    axis.text.x = element_text(size = 8),   # Reduced x-axis text size by 3 points
+    axis.text.y = element_text(size = 8),   # Reduced y-axis text size by 3 points
+    legend.position = "right",  # Move legend to the right
+    legend.box = "vertical",   # Stack the legend vertically
+    legend.text = element_text(size = 7),  # Reduced legend text size by 3 points
+    legend.title = element_text(size = 8), # Reduced legend title size by 3 points
+    strip.text = element_text(size = 9)    # Reduced facet label size by 3 points
+  )
+
+
+```
+So we learned how to use google fonts and how to create a ribbon plot today!
+
+Now let's save the plot...
+```{r}
+ggsave(here("Tidy_Tuesday", "TT_5", "Output", "immigration_encounters_plot.png"), plot = plot, width = 10, height = 8)
+
+```
+
