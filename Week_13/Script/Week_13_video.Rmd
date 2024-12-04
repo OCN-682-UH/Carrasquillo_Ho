@@ -1,0 +1,139 @@
+---
+title: "Week_13"
+author: "Solimar Carrasquillo Ho"
+date: "2024-12-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Intro to modeling 
+
+# load up the libraries 
+```{r}
+library(modelsummary) # to show model output
+library(tidymodels) # for tidy models
+library(broom) # for clean model output
+library(flextable) # to look at model results in a nice table
+library(performance) # to check model assumptions
+library(here)
+library(pandoc) # asked to download to run line 76
+library(wesanderson)
+```
+The basic anatomy of a linear model
+1. To run a simple linear model for the following formula
+mod <-lm(y~x, data = df)
+lm = linear model, y = dependent variable, x = independent variables(s), df = dataframe
+You'll read this as y is a function of x. 
+
+Multiple regression
+mod <- lm(y~x1 + x2, data = df)
+
+Interaction term
+mod <-lm(y~x*x2, data = df) 
+
+Let's try to model the penguin dataset.
+
+```{r}
+Peng_mod<-lm(bill_length_mm ~ bill_depth_mm*species, data = penguins)
+```
+
+
+We need to check the assumptions of the model with performance! ALWAYS check the assumptions of your specific models. 
+
+```{r}
+check_model(Peng_mod) #checks the assumption
+```
+
+View results in base r
+```{r}
+anova(Peng_mod)
+```
+Use summary to look at the coeffcients (effect size) with error
+```{r}
+summary(Peng_mod)
+```
+
+The broom package allows us to take the summary, residual, and ANOVA to put it in a nice tibble. Which allows you to do something with it in the data and export your results!
+
+```{r}
+coeffs<-tidy(Peng_mod) #just put tidy() around the model
+coeffs
+```
+If we wnat to look at the pvalue for the entire model and r values, we'll use the glance model
+```{r}
+results <-glance(Peng_mod)
+results
+```
+
+If we want to extract the residuals for the fitted values. We'll use the augment function
+```{r}
+resid_fitted<-augment(Peng_mod)
+resid_fitted
+```
+
+Results in the modelsummary package. 
+
+This will export an actual document in the format of a table!!! 
+```{r}
+Peng_mod_noX<- lm(bill_length_mm ~ bill_depth_mm, data = penguins)
+
+# make a list of models and name them
+models <-list("Model with interactions" = Peng_mod,
+              "MOdel with no interaction" = Peng_mod_noX)
+
+#save the results as a .docx
+modelsummary(models, output = here("Week_13", "Output", "table.docx"))
+```
+
+We can make a canned coefficient modelplot.
+
+```{r}
+modelplot(models) +
+    labs(x = 'Coefficients', 
+         y = 'Term names') +
+    scale_color_manual(values = wes_palette('Darjeeling1'))
+
+```
+What if we want to run models with many parameters. 
+
+```{r}
+models <- penguins %>%
+  ungroup() %>% #the penguin data are grouped so we'll need to ungroup them
+  nest(.by = species) # nest all the data by species
+
+models
+```
+
+```{r}
+models <- penguins %>%
+  ungroup() %>% #the penguin data are grouped so we'll need to ungroup them
+  nest(.by = species) %>% # nest all the data by species
+  mutate(fit = map(data, ~lm(bill_length_mm~body_mass_g, data = .)))
+
+models
+```
+
+```{r}
+models$fit
+```
+to get the results
+```{r}
+results<-models %>%
+  mutate(coeffs = map(fit, tidy), #look at the coefficients
+         modelresults = map(fit, glance)) %>% # R2 and other values
+  select(species, coeffs, modelresults) %>%
+           unnest()
+
+view(results)
+```
+
+```{r}
+lm_mod<-linear_reg() %>%
+  set_engine("lm") %>%
+  fit(bill_length_mm ~ bill_depth_mm*species, data = penguins)
+
+lm_mod
+```
+
