@@ -1,0 +1,65 @@
+---
+title: "TT_6"
+author: "Solimar Carrasquillo Ho"
+date: "2024-12-07"
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We're working with traffic data this week
+```{r}
+traffic <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2024/2024-12-03/A64_traffic.csv')
+```
+
+Lets make an animated plot! 
+
+load the libraries
+```{r}
+library(tidyverse)
+library(gganimate)
+library(lubridate)
+library(ggplot2)
+library(here)
+```
+
+# Data wrangling 
+
+```{r}
+long_traffic <- traffic %>%
+  pivot_longer(cols = `0 - 520 cm`:`1160+ cm`,
+               names_to = "length",
+               values_to = "count_length") %>%
+  pivot_longer(cols = `0 - 10 mph`:`80+ mph`,
+               names_to = "speed",
+               values_to = "count_speed") %>%
+    filter(count_length != 0, count_speed != 0) 
+
+
+
+
+```
+
+Heat map
+```{r}
+ggplot(long_traffic, aes(x = speed, y = count_length, fill = count_speed)) +
+  geom_tile() +
+  scale_fill_gradient(low = "yellow", high = "red") +
+  labs(
+    title = "Vehicle Counts by Speed and Car Length",
+    x = "Speed Category (mph)",
+    y = "Car Length (cm)",
+    fill = "Vehicle Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+This week I learned how to make a heatmap! I also learned how to use new Rmark down themes. 
